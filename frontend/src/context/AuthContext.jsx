@@ -38,6 +38,16 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  const googleLogin = useCallback(async (credential) => {
+    const res = await api.post("/auth/google", { credential });
+    const { token, user } = res.data;
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
+    setToken(token);
+    setUser(user);
+    return user;
+  }, []);
+
   const updateUser = useCallback((updates) => {
     setUser((prev) => {
       const next = { ...prev, ...updates };
@@ -60,6 +70,7 @@ export function AuthProvider({ children }) {
         signup,
         login,
         logout,
+        googleLogin,
         updateUser,
         isAdmin,
         isLoggedIn,

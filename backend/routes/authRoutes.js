@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   signup,
   login,
+  googleAuth,
   getMe,
   updateProfile,
   forgotPassword,
@@ -21,7 +22,7 @@ const { upload, compressImage } = require("../middleware/upload");
 router.post("/signup", authLimiter, rules.signup, runValidation, signup);
 router.post("/login", authLimiter, rules.login, runValidation, login);
 router.get("/me", protect, getMe);
-
+router.post("/google", authLimiter, googleAuth);
 router.put(
   "/profile",
   protect,

@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { GoogleLogin } from "@react-oauth/google";
 
 export default function AuthModal({ open, onClose }) {
-  const { signup, login } = useAuth();
-  const [mode, setMode] = useState("signup"); // "signup" | "login"
+  const { signup, login, googleLogin } = useAuth();
+  const [mode, setMode] = useState("choose"); 
   const [agree, setAgree] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
@@ -19,9 +20,12 @@ export default function AuthModal({ open, onClose }) {
     setError("");
     try {
       await signup(form.name, form.email, form.password);
-      alert("Account created successfully!");
+      alert(
+        "Account created successfully! A confirmation email has been sent to your inbox.",
+      );
       setForm({ name: "", email: "", password: "" });
       setAgree(false);
+      setMode("choose");
       onClose();
     } catch (err) {
       setError(err.response?.data?.message || "Signup failed");
@@ -37,11 +41,38 @@ export default function AuthModal({ open, onClose }) {
       alert("Login successful!");
       setForm({ name: "", email: "", password: "" });
       setAgree(false);
+      setMode("choose");
       onClose();
     } catch (err) {
       setError(err.response?.data?.message || "Invalid email or password");
     }
   };
+
+  const handleGoogle = async (credentialResponse) => {
+    setError("");
+    try {
+      await googleLogin(credentialResponse.credential);
+      setForm({ name: "", email: "", password: "" });
+      setAgree(false);
+      setMode("choose");
+      onClose();
+    } catch (err) {
+      setError(err.response?.data?.message || "Google sign in failed");
+    }
+  };
+
+  const googleButton = (text) =>
+    import.meta.env.VITE_GOOGLE_CLIENT_ID ? (
+      <div className="google-btn-wrap">
+        <GoogleLogin
+          onSuccess={handleGoogle}
+          onError={() => setError("Google sign in failed")}
+          text={text}
+          shape="pill"
+          width="280"
+        />
+      </div>
+    ) : null;
 
   return (
     <section id="signForm">
@@ -55,7 +86,32 @@ export default function AuthModal({ open, onClose }) {
             &times;
           </span>
 
-          {mode === "signup" ? (
+          {mode === "choose" ? (
+            <div className="auth-form">
+              <h2>Sign Up</h2>
+              {error && <p className="admin-error">{error}</p>}
+
+              {googleButton("signup_with")}
+              <div className="auth-divider">
+                <span>or</span>
+              </div>
+              <button type="button" onClick={() => setMode("signup")}>
+                Sign up with email
+              </button>
+
+              <p className="switch-text">
+                Already have an account?{" "}
+                <span
+                  onClick={() => {
+                    setMode("login");
+                    setError("");
+                  }}
+                >
+                  Login here
+                </span>
+              </p>
+            </div>
+          ) : mode === "signup" ? (
             <form className="auth-form" onSubmit={handleSignup}>
               <h2>Sign Up</h2>
               {error && <p className="admin-error">{error}</p>}
@@ -150,11 +206,13 @@ export default function AuthModal({ open, onClose }) {
                 </p>
               </label>
 
+              {googleButton("signin_with")}
+
               <p className="switch-text">
                 Create new account?{" "}
                 <span
                   onClick={() => {
-                    setMode("signup");
+                    setMode("choose");
                     setError("");
                   }}
                 >

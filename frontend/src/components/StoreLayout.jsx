@@ -12,14 +12,18 @@ export default function StoreLayout() {
 
   return (
     <>
-      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
-      <Navbar
-        onOpenSearch={() => setSearchOpen(true)}
-        onOpenAuth={openAuthModal}
-      />
-      <Outlet context={{ openAuth: openAuthModal }} />
-      <AuthModal open={authModalOpen} onClose={closeAuthModal} />
-      <Footer />
+      <div className="store-shell">
+        <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
+        <Navbar
+          onOpenSearch={() => setSearchOpen(true)}
+          onOpenAuth={openAuthModal}
+        />
+        <main className="store-main">
+          <Outlet context={{ openAuth: openAuthModal }} />
+        </main>
+        <AuthModal open={authModalOpen} onClose={closeAuthModal} />
+        <Footer />
+      </div>
     </>
   );
 }

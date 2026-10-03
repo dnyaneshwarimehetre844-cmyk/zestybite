@@ -12,7 +12,14 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-    password: { type: String, required: true },
+    password: {
+      type: String,
+      required: function () {
+        return !this.googleId;
+      },
+    },
+    googleId: { type: String, default: null, index: true },
+    authProvider: { type: String, enum: ["local", "google"], default: "local" },
     avatar: { type: String, default: null },
     role: { type: String, enum: ["user", "admin"], default: "user" },
     resetPasswordToken: { type: String, default: null },
@@ -38,7 +45,7 @@ userSchema.methods.createPasswordResetToken = function () {
     .createHash("sha256")
     .update(rawToken)
     .digest("hex");
-  this.resetPasswordExpires = Date.now() + 30 * 60 * 1000; // 30 minutes
+  this.resetPasswordExpires = Date.now() + 30 * 60 * 1000; 
   return rawToken;
 };
 

@@ -3224,3 +3224,42 @@ header {
     font-size: 18px;
   }
 }
+.store-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+.store-main {
+  flex: 1 0 auto;
+  width: 100%;
+}
+.store-shell > .footer {
+  flex-shrink: 0;
+  margin-top: auto;
+}
+
+.google-btn-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+  min-height: 40px;
+}
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 2px;
+  color: #888;
+  font-size: 13px;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #ddd;
+}
+.auth-form > button {
+  width: 100%;
+}

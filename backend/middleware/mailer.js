@@ -62,5 +62,39 @@ const sendOrderConfirmationEmail = async (to, order) => {
     `,
   });
 };
+const escapeHtml = (s) =>
+  String(s).replace(
+    /[&<>"']/g,
+    (c) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      })[c],
+  );
+const sendWelcomeEmail = async (to, fullName) => {
+  const name = escapeHtml(fullName || "there");
+  return sendEmail({
+    to,
+    subject: "Welcome to ZestyBite - you signed up successfully!",
+    text: `Hi ${name}, you have signed up successfully on ZestyBite. Start ordering your favourite food now!`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:480px">
+        <h2 style="color:#ff6a00">Welcome to ZestyBite, ${name}!</h2>
+        <p>You have <strong>signed up successfully</strong> on ZestyBite.</p>
+        <p>Start ordering your favourite food now.</p>
+        <p style="color:#888;font-size:12px">If you did not create this account, please ignore this email.</p>
+      </div>
+    `,
+  });
+};
 
-module.exports = { sendEmail, sendPasswordResetEmail, sendOrderConfirmationEmail };
+module.exports = {
+  sendEmail,
+  escapeHtml,
+  sendWelcomeEmail,
+  sendPasswordResetEmail,
+  sendOrderConfirmationEmail,
+};

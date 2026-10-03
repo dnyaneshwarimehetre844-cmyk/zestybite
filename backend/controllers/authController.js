@@ -1,7 +1,34 @@
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const User = require("../models/User");
-const { sendPasswordResetEmail } = require("../middleware/mailer");
+const dns = require("dns").promises;
+const { OAuth2Client } = require("google-auth-library");
+const {
+  sendPasswordResetEmail,
+  sendWelcomeEmail,
+} = require("../middleware/mailer");
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+const userPayload = (user) => ({
+  id: user._id,
+  fullName: user.fullName,
+  email: user.email,
+  role: user.role,
+  avatar: user.avatar || null,
+});
+
+const domainCanReceiveMail = async (email) => {
+  const domain = String(email).split("@")[1];
+  if (!domain) return false;
+  try {
+    const mx = await dns.resolveMx(domain);
+    return mx.length > 0;
+  } catch (err) {
+    if (err.code === "ENOTFOUND" || err.code === "ENODATA") return false;
+    return true;
+  }
+};
 
 const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
@@ -10,27 +37,32 @@ exports.signup = async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
 
+    if (!(await domainCanReceiveMail(email))) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a real email address that can receive mail",
+      });
+    }
+
     const existing = await User.findOne({ email: email.toLowerCase() });
     if (existing) {
-      return res
-        .status(409)
-        .json({ success: false, message: "Email already registered" });
+      return res.status(409).json({
+        success: false,
+        message:
+          existing.authProvider === "google" && !existing.password
+            ? "This email is registered with Google. Please use Google sign in."
+            : "Email already registered",
+      });
     }
 
     const user = await User.create({ fullName, email, password });
     const token = signToken(user._id);
 
-    res.status(201).json({
-      success: true,
-      token,
-      user: {
-        id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar || null,
-      },
-    });
+    sendWelcomeEmail(user.email, user.fullName).catch((e) =>
+      console.error("Welcome email failed:", e.message),
+    );
+
+    res.status(201).json({ success: true, token, user: userPayload(user) });
   } catch (err) {
     res
       .status(500)
@@ -43,6 +75,13 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email: email.toLowerCase() });
+    if (user && !user.password) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "This account uses Google sign in. Please continue with Google.",
+      });
+    }
     if (!user || !(await user.comparePassword(password))) {
       return res
         .status(401)
@@ -51,21 +90,66 @@ exports.login = async (req, res) => {
 
     const token = signToken(user._id);
 
-    res.json({
-      success: true,
-      token,
-      user: {
-        id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar || null,
-      },
-    });
+    res.json({ success: true, token, user: userPayload(user) });
   } catch (err) {
     res
       .status(500)
       .json({ success: false, message: err.message || "Login failed" });
+  }
+};
+
+exports.googleAuth = async (req, res) => {
+  try {
+    const { credential } = req.body;
+    if (!credential || !process.env.GOOGLE_CLIENT_ID) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Google sign in is not configured" });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+
+    if (!payload?.email || !payload.email_verified) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Google email is not verified" });
+    }
+
+    const email = payload.email.toLowerCase();
+    let user = await User.findOne({ email });
+    let isNew = false;
+
+    if (!user) {
+      user = await User.create({
+        fullName: payload.name || email.split("@")[0],
+        email,
+        googleId: payload.sub,
+        authProvider: "google",
+        avatar: payload.picture || null,
+      });
+      isNew = true;
+    } else if (!user.googleId) {
+      user.googleId = payload.sub;
+      await user.save({ validateBeforeSave: false });
+    }
+
+    if (isNew) {
+      sendWelcomeEmail(user.email, user.fullName).catch((e) =>
+        console.error("Welcome email failed:", e.message),
+      );
+    }
+
+    res.json({
+      success: true,
+      token: signToken(user._id),
+      user: userPayload(user),
+    });
+  } catch (err) {
+    res.status(401).json({ success: false, message: "Google sign in failed" });
   }
 };
 
@@ -84,16 +168,7 @@ exports.updateAvatar = async (req, res) => {
     req.user.avatar = req.body.image;
     await req.user.save();
 
-    res.json({
-      success: true,
-      user: {
-        id: req.user._id,
-        fullName: req.user.fullName,
-        email: req.user.email,
-        role: req.user.role,
-        avatar: req.user.avatar,
-      },
-    });
+    res.json({ success: true, user: userPayload(req.user) });
   } catch (err) {
     res
       .status(500)
@@ -117,7 +192,7 @@ exports.forgotPassword = async (req, res) => {
     const rawToken = user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
 
-    const resetUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/reset-password/${rawToken}`;
+    const resetUrl = `${(process.env.CLIENT_URL || "http://localhost:5173").split(",")[0].trim()}/reset-password/${rawToken}`;
 
     try {
       await sendPasswordResetEmail(user.email, resetUrl);
@@ -139,18 +214,23 @@ exports.forgotPassword = async (req, res) => {
       .json({ success: false, message: err.message || "Request failed" });
   }
 };
+
 exports.updateProfile = async (req, res) => {
   try {
     const { currentPassword, newEmail, newPassword, fullName } = req.body;
 
     const user = await User.findById(req.user._id).select("+password");
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     const isMatch = await user.comparePassword(currentPassword);
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: "Current password is incorrect" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Current password is incorrect" });
     }
 
     if (fullName) user.fullName = fullName;
@@ -158,7 +238,9 @@ exports.updateProfile = async (req, res) => {
     if (newEmail && newEmail.toLowerCase() !== user.email) {
       const existing = await User.findOne({ email: newEmail.toLowerCase() });
       if (existing) {
-        return res.status(409).json({ success: false, message: "Email already registered" });
+        return res
+          .status(409)
+          .json({ success: false, message: "Email already registered" });
       }
       user.email = newEmail.toLowerCase();
     }
@@ -169,20 +251,15 @@ exports.updateProfile = async (req, res) => {
 
     await user.save();
 
-    res.json({
-      success: true,
-      user: {
-        id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar || null,
-      },
-    });
+    res.json({ success: true, user: userPayload(user) });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message || "Profile update failed" });
+    res.status(500).json({
+      success: false,
+      message: err.message || "Profile update failed",
+    });
   }
 };
+
 exports.resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
@@ -213,13 +290,7 @@ exports.resetPassword = async (req, res) => {
       success: true,
       message: "Password has been reset successfully",
       token: jwtToken,
-      user: {
-        id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar || null,
-      },
+      user: userPayload(user),
     });
   } catch (err) {
     res
