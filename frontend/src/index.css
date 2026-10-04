@@ -1131,7 +1131,9 @@ header {
 .app-download-platform img:hover {
   transform: scale(1.05);
 }
-
+.app-download-platform a {
+  display: inline-flex;
+}
 .footer {
   background: #2f2f2f;
   color: whitesmoke;
