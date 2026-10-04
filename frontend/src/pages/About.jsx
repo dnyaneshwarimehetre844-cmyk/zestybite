@@ -146,6 +146,7 @@ export default function About() {
           <span></span>
         </div>
       </div>
+
       <section className="page-container">
         <Reveal variant="up">
           <h2>Who We Are</h2>

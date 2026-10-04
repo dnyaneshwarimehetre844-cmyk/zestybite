@@ -92,16 +92,20 @@ export default function Navbar({ onOpenSearch, onOpenAuth }) {
               Menu
             </a>
 
-            <a href="/#app-download" onClick={closeMenu} className="nav-link">
-              Mobile-App
-            </a>
+            <Link
+              to="/about"
+              onClick={closeMenu}
+              className={`nav-link ${isActive("/about") ? "active" : ""}`}
+            >
+              About Us
+            </Link>
 
             <Link
-              to="/contact"
+              to="/delivery"
               onClick={closeMenu}
-              className={`nav-link ${isActive("/contact") ? "active" : ""}`}
+              className={`nav-link ${isActive("/delivery") ? "active" : ""}`}
             >
-              Contact Us
+              Delivery
             </Link>
           </div>
 

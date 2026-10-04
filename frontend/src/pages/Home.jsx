@@ -456,31 +456,6 @@ export default function Home() {
           </div>
         </section>
       )}
-
-      <section className="app-download" id="app-download">
-        <p>
-          For Better Experience Download
-          <br />
-          ZestyBite App
-        </p>
-
-        <div className="app-download-platform">
-          <a
-            href="https://play.google.com/store/apps/details?id=YOUR_APP_ID"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img src="/images/assets/play_store.png" alt="play_store" />
-          </a>
-          <a
-            href="https://apps.apple.com/app/zestybite/idYOUR_APP_ID"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img src="/images/assets/app_store.png" alt="app_store" />
-          </a>
-        </div>
-      </section>
     </>
   );
 }

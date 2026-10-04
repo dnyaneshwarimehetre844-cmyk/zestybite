@@ -25,7 +25,7 @@
 
 .about-hero {
   position: relative;
-  height: 700px;
+  height: 900px;
   overflow: hidden;
 }
 
@@ -87,7 +87,7 @@
   font-size: clamp(28px, 5vw, 48px);
   font-weight: 700;
   line-height: 1.2;
-  max-width: 700px;
+  max-width: 800px;
   opacity: 0;
   transform: translateY(24px);
   animation: heroPop 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
@@ -124,7 +124,6 @@
   }
 }
 
-/* floating stat chips */
 .about-hero-stats {
   display: flex;
   gap: 16px;
@@ -173,7 +172,6 @@
   opacity: 0.85;
 }
 
-/* bouncing scroll cue */
 .about-hero-scroll {
   position: absolute;
   bottom: 22px;
@@ -215,7 +213,7 @@
 
 @media (max-width: 768px) {
   .about-hero {
-    height: 500px;
+    height: 800px;
   }
   .about-hero-stats {
     gap: 10px;
@@ -270,7 +268,6 @@
   }
 }
 
-/* ---- "Why Choose Us" checklist ---- */
 .why-list {
   list-style: none;
   padding: 0;
@@ -303,7 +300,6 @@
   transform: scale(1);
 }
 
-/* ---- rating cards: hover lift ---- */
 .rating-card {
   transition:
     transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
@@ -314,7 +310,6 @@
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.15);
 }
 
-/* ---- team cards: photo tilt on hover ---- */
 .team-card img {
   transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -322,7 +317,6 @@
   transform: scale(1.08) rotate(-2deg);
 }
 
-/* ---- CTA button: soft pulse + shine sweep ---- */
 .about-cta .cta-btn {
   position: relative;
   overflow: hidden;

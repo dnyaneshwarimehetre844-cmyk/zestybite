@@ -1,11 +1,33 @@
 .delivery-hero {
-  background: linear-gradient(135deg, var(--brand) 0%, #ff8a50 100%);
-  padding: 70px 20px;
+  position: relative;
+  overflow: hidden;
+  height: 530px;
+  padding: 70px 20px 24px;
   text-align: center;
   color: #fff;
+  background: linear-gradient(120deg, #ff5722, #e5533f, #cc4634, #ff5722);
+  background-size: 300% 300%;
+  animation: heroGradient 12s ease infinite;
+}
+.delivery-hero-badge {
+  background: rgba(255, 87, 34, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+@keyframes heroGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .delivery-hero-content {
+  position: relative;
+  z-index: 2;
   max-width: 640px;
   margin: 0 auto;
 }
@@ -31,6 +53,67 @@
   font-size: 15px;
   opacity: 0.95;
   line-height: 1.6;
+}
+
+/* Floating food */
+.delivery-floaters span {
+  position: absolute;
+  bottom: -50px;
+  font-size: 30px;
+  opacity: 0;
+  animation: floatUp linear infinite;
+}
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.55;
+  }
+  90% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateY(-460px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Route scene */
+.delivery-route {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  max-width: 720px;
+  margin: 10px auto 0;
+}
+.route-flow {
+  animation: routeFlow 1s linear infinite;
+}
+@keyframes routeFlow {
+  to {
+    stroke-dashoffset: -14;
+  }
+}
+.route-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: routePulse 2s ease-out infinite;
+}
+.route-pulse-2 {
+  animation-delay: 1s;
+}
+@keyframes routePulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
 }
 
 .delivery-container {
@@ -227,10 +310,38 @@
   margin-bottom: 16px;
 }
 
+/* Track above the steps */
+.delivery-track {
+  position: relative;
+  height: 6px;
+  margin: 30px 0 10px;
+  background: #ffe0d1;
+  border-radius: 6px;
+}
+.delivery-track-fill {
+  height: 100%;
+  background: var(--brand);
+  border-radius: 6px;
+}
+.delivery-track-rider {
+  position: absolute;
+  top: -22px;
+  transform: translateX(-50%);
+  font-size: 24px;
+  color: var(--brand);
+}
+.delivery-track-rider i {
+  transform: scaleX(-1);
+  display: inline-block;
+}
+
 @media (max-width: 900px) {
   .delivery-steps,
   .delivery-info-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .delivery-track {
+    display: none;
   }
 }
 
@@ -238,5 +349,14 @@
   .delivery-steps,
   .delivery-info-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .delivery-hero,
+  .delivery-floaters span,
+  .route-flow,
+  .route-pulse {
+    animation: none;
   }
 }

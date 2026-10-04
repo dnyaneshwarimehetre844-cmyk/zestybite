@@ -1,4 +1,5 @@
 import "../css/Delivery.css";
+import { motion } from "framer-motion";
 
 const DELIVERY_STEPS = [
   {
@@ -36,6 +37,8 @@ const AREAS = [
   "Camp",
 ];
 
+const FLOATERS = ["🍕", "🍔", "🍜", "🥗", "🍟", "🌮", "🍩", "🥤"];
+
 const FAQS = [
   {
     q: "How long does delivery usually take?",
@@ -67,28 +70,160 @@ export default function Delivery() {
   return (
     <>
       <div className="delivery-hero">
+        <div className="delivery-floaters" aria-hidden="true">
+          {FLOATERS.map((emoji, i) => (
+            <span
+              key={i}
+              style={{
+                left: `${6 + i * 12}%`,
+                animationDelay: `${i * 1.1}s`,
+                animationDuration: `${9 + (i % 3) * 2}s`,
+              }}
+            >
+              {emoji}
+            </span>
+          ))}
+        </div>
+
         <div className="delivery-hero-content">
-          <span className="delivery-hero-badge">🛵 Fast & Reliable</span>
-          <h1>Delivery, Done Right</h1>
-          <p>
+          <motion.span
+            className="delivery-hero-badge"
+            initial={{ opacity: 0, scale: 0.6 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: "spring", delay: 0.1 }}
+          >
+            🛵 Fast & Reliable
+          </motion.span>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.25 }}
+          >
+            Delivery, Done Right
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.45 }}
+          >
             From your favorite restaurant to your doorstep — here's everything
             you need to know about how ZestyBite delivery works.
-          </p>
+          </motion.p>
         </div>
+
+        <svg
+          className="delivery-route"
+          viewBox="0 0 800 150"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            id="routePath"
+            d="M60 105 C 200 5, 330 165, 470 85 S 700 30, 740 95"
+            stroke="rgba(255,255,255,0.22)"
+            strokeWidth="6"
+            strokeLinecap="round"
+          />
+          <path
+            className="route-flow"
+            d="M60 105 C 200 5, 330 165, 470 85 S 700 30, 740 95"
+            stroke="#fff"
+            strokeWidth="4"
+            strokeDasharray="2 12"
+            strokeLinecap="round"
+          />
+
+          <circle cx="60" cy="105" r="26" fill="#fff" />
+          <text
+            x="60"
+            y="105"
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize="26"
+          >
+            🍳
+          </text>
+
+          <circle
+            className="route-pulse"
+            cx="740"
+            cy="95"
+            r="26"
+            fill="rgba(255,255,255,0.55)"
+          />
+          <circle
+            className="route-pulse route-pulse-2"
+            cx="740"
+            cy="95"
+            r="26"
+            fill="rgba(255,255,255,0.55)"
+          />
+          <circle cx="740" cy="95" r="26" fill="#fff" />
+          <text
+            x="740"
+            y="95"
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize="26"
+          >
+            🏠
+          </text>
+
+          <g>
+            <animateMotion dur="5s" repeatCount="indefinite" calcMode="linear">
+              <mpath href="#routePath" />
+            </animateMotion>
+            <text
+              textAnchor="middle"
+              dominantBaseline="central"
+              fontSize="34"
+              transform="scale(-1,1)"
+            >
+              🛵
+            </text>
+          </g>
+        </svg>
       </div>
 
       <section className="page-container delivery-container">
         <h2>How Delivery Works</h2>
+
+        <div className="delivery-track" aria-hidden="true">
+          <motion.div
+            className="delivery-track-fill"
+            initial={{ width: "0%" }}
+            whileInView={{ width: "100%" }}
+            viewport={{ once: true, amount: 0.6 }}
+            transition={{ duration: 2.4, ease: "linear" }}
+          />
+        </div>
+
         <div className="delivery-steps">
           {DELIVERY_STEPS.map((step, idx) => (
-            <div className="delivery-step" key={step.title}>
-              <div className="delivery-step-icon">
+            <motion.div
+              className="delivery-step"
+              key={step.title}
+              initial={{ opacity: 0, y: 40, scale: 0.9 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, amount: 0.4 }}
+              transition={{ duration: 0.5, delay: idx * 0.6 }}
+              whileHover={{ y: -8 }}
+            >
+              <motion.div
+                className="delivery-step-icon"
+                initial={{ rotate: -180, scale: 0 }}
+                whileInView={{ rotate: 0, scale: 1 }}
+                viewport={{ once: true, amount: 0.4 }}
+                transition={{ type: "spring", delay: idx * 0.6 + 0.2 }}
+              >
                 <i className={`fa-solid ${step.icon}`}></i>
-              </div>
+              </motion.div>
               <div className="delivery-step-number">{idx + 1}</div>
               <h3>{step.title}</h3>
               <p>{step.text}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
 
